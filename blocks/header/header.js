@@ -12,12 +12,58 @@ function pushToDataLayer(payload) {
 }
 // ---------------------------------------------------
 
-// media query match that indicates mobile/tablet width
 const isDesktop = window.matchMedia('(min-width: 900px)');
 
-/**
- * Toggles all nav sections
- */
+function openOnKeydown(e) {
+  const focused = document.activeElement;
+  const isNavDrop = focused.className === 'nav-drop';
+
+  if (isNavDrop && (e.code === 'Enter' || e.code === 'Space')) {
+    const dropExpanded = focused.getAttribute('aria-expanded') === 'true';
+    toggleAllNavSections(focused.closest('.nav-sections'));
+    focused.setAttribute('aria-expanded', dropExpanded ? 'false' : 'true');
+  }
+}
+
+function focusNavSection() {
+  document.activeElement.addEventListener('keydown', openOnKeydown);
+}
+
+function closeOnEscape(e) {
+  if (e.code === 'Escape') {
+    const nav = document.getElementById('nav');
+    const navSections = nav.querySelector('.nav-sections');
+    if (!navSections) return;
+
+    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
+
+    if (navSectionExpanded && isDesktop.matches) {
+      toggleAllNavSections(navSections);
+      navSectionExpanded.focus();
+    } else if (!isDesktop.matches) {
+      toggleMenu(nav, navSections);
+      nav.querySelector('button').focus();
+    }
+  }
+}
+
+function closeOnFocusLost(e) {
+  const nav = e.currentTarget;
+
+  if (!nav.contains(e.relatedTarget)) {
+    const navSections = nav.querySelector('.nav-sections');
+    if (!navSections) return;
+
+    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
+
+    if (navSectionExpanded && isDesktop.matches) {
+      toggleAllNavSections(navSections, false);
+    } else if (!isDesktop.matches) {
+      toggleMenu(nav, navSections, false);
+    }
+  }
+}
+
 function toggleAllNavSections(sections, expanded = false) {
   if (!sections) return;
 
@@ -27,9 +73,6 @@ function toggleAllNavSections(sections, expanded = false) {
     });
 }
 
-/**
- * Toggles the entire nav
- */
 function toggleMenu(nav, navSections, forceExpanded = null) {
   const expanded = forceExpanded !== null
     ? !forceExpanded
@@ -38,7 +81,6 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
   const button = nav.querySelector('.nav-hamburger button');
   const newState = expanded ? 'closed' : 'open';
 
-  // ✅ ACDL Tracking
   pushToDataLayer({
     event: 'navToggle',
     navigation: {
@@ -80,59 +122,6 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
   }
 }
 
-function closeOnEscape(e) {
-  if (e.code === 'Escape') {
-    const nav = document.getElementById('nav');
-    const navSections = nav.querySelector('.nav-sections');
-    if (!navSections) return;
-
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-
-    if (navSectionExpanded && isDesktop.matches) {
-      toggleAllNavSections(navSections);
-      navSectionExpanded.focus();
-    } else if (!isDesktop.matches) {
-      toggleMenu(nav, navSections);
-      nav.querySelector('button').focus();
-    }
-  }
-}
-
-function closeOnFocusLost(e) {
-  const nav = e.currentTarget;
-
-  if (!nav.contains(e.relatedTarget)) {
-    const navSections = nav.querySelector('.nav-sections');
-    if (!navSections) return;
-
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-
-    if (navSectionExpanded && isDesktop.matches) {
-      toggleAllNavSections(navSections, false);
-    } else if (!isDesktop.matches) {
-      toggleMenu(nav, navSections, false);
-    }
-  }
-}
-
-function openOnKeydown(e) {
-  const focused = document.activeElement;
-  const isNavDrop = focused.className === 'nav-drop';
-
-  if (isNavDrop && (e.code === 'Enter' || e.code === 'Space')) {
-    const dropExpanded = focused.getAttribute('aria-expanded') === 'true';
-    toggleAllNavSections(focused.closest('.nav-sections'));
-    focused.setAttribute('aria-expanded', dropExpanded ? 'false' : 'true');
-  }
-}
-
-function focusNavSection() {
-  document.activeElement.addEventListener('keydown', openOnKeydown);
-}
-
-/**
- * loads and decorates the header
- */
 export default async function decorate(block) {
   const navMeta = getMetadata('nav');
   const navPath = navMeta ? new URL(navMeta, window.location).pathname : '/nav';
@@ -167,7 +156,6 @@ export default async function decorate(block) {
   if (navSections) {
     navSections.querySelectorAll(':scope .default-content-wrapper > ul > li')
       .forEach((navSection) => {
-
         if (navSection.querySelector('ul')) {
           navSection.classList.add('nav-drop');
         }
@@ -175,7 +163,6 @@ export default async function decorate(block) {
         navSection.addEventListener('click', () => {
           const navText = navSection.textContent.trim();
 
-          // ✅ ACDL Tracking
           pushToDataLayer({
             event: 'navClick',
             navigation: {
@@ -225,7 +212,6 @@ export default async function decorate(block) {
   navWrapper.append(nav);
   block.append(navWrapper);
 
-  // ✅ Page Load Tracking
   pushToDataLayer({
     event: 'pageLoaded',
     page: {
