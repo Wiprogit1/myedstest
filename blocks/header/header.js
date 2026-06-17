@@ -7,7 +7,7 @@ window.adobeDataLayer = window.adobeDataLayer || [];
 function pushToDataLayer(payload) {
   window.adobeDataLayer.push({
     ...payload,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }
 // ---------------------------------------------------
@@ -15,84 +15,36 @@ function pushToDataLayer(payload) {
 // media query match that indicates mobile/tablet width
 const isDesktop = window.matchMedia('(min-width: 900px)');
 
-function closeOnEscape(e) {
-  if (e.code === 'Escape') {
-    const nav = document.getElementById('nav');
-    const navSections = nav.querySelector('.nav-sections');
-    if (!navSections) return;
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-
-    if (navSectionExpanded && isDesktop.matches) {
-      toggleAllNavSections(navSections);
-      navSectionExpanded.focus();
-    } else if (!isDesktop.matches) {
-      toggleMenu(nav, navSections);
-      nav.querySelector('button').focus();
-    }
-  }
-}
-
-function closeOnFocusLost(e) {
-  const nav = e.currentTarget;
-  if (!nav.contains(e.relatedTarget)) {
-    const navSections = nav.querySelector('.nav-sections');
-    if (!navSections) return;
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-
-    if (navSectionExpanded && isDesktop.matches) {
-      toggleAllNavSections(navSections, false);
-    } else if (!isDesktop.matches) {
-      toggleMenu(nav, navSections, false);
-    }
-  }
-}
-
-function openOnKeydown(e) {
-  const focused = document.activeElement;
-  const isNavDrop = focused.className === 'nav-drop';
-
-  if (isNavDrop && (e.code === 'Enter' || e.code === 'Space')) {
-    const dropExpanded = focused.getAttribute('aria-expanded') === 'true';
-    toggleAllNavSections(focused.closest('.nav-sections'));
-    focused.setAttribute('aria-expanded', dropExpanded ? 'false' : 'true');
-  }
-}
-
-function focusNavSection() {
-  document.activeElement.addEventListener('keydown', openOnKeydown);
-}
-
 /**
  * Toggles all nav sections
  */
 function toggleAllNavSections(sections, expanded = false) {
   if (!sections) return;
 
-  sections.querySelectorAll('.nav-sections .default-content-wrapper > ul > li').forEach((section) => {
-    section.setAttribute('aria-expanded', expanded);
-  });
+  sections.querySelectorAll('.nav-sections .default-content-wrapper > ul > li')
+    .forEach((section) => {
+      section.setAttribute('aria-expanded', expanded);
+    });
 }
 
 /**
  * Toggles the entire nav
  */
 function toggleMenu(nav, navSections, forceExpanded = null) {
-  const expanded =
-    forceExpanded !== null
-      ? !forceExpanded
-      : nav.getAttribute('aria-expanded') === 'true';
+  const expanded = forceExpanded !== null
+    ? !forceExpanded
+    : nav.getAttribute('aria-expanded') === 'true';
 
   const button = nav.querySelector('.nav-hamburger button');
-
   const newState = expanded ? 'closed' : 'open';
 
-  // ✅ ACDL Tracking - menu toggle
+  // ✅ ACDL Tracking
   pushToDataLayer({
-    event: "navToggle",
+    event: 'navToggle',
     navigation: {
       menuState: newState,
-      device: isDesktop.matches ? "desktop" : "mobile"
-    }
+      device: isDesktop.matches ? 'desktop' : 'mobile',
+    },
   });
 
   document.body.style.overflowY = (expanded || isDesktop.matches) ? '' : 'hidden';
@@ -128,6 +80,56 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
   }
 }
 
+function closeOnEscape(e) {
+  if (e.code === 'Escape') {
+    const nav = document.getElementById('nav');
+    const navSections = nav.querySelector('.nav-sections');
+    if (!navSections) return;
+
+    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
+
+    if (navSectionExpanded && isDesktop.matches) {
+      toggleAllNavSections(navSections);
+      navSectionExpanded.focus();
+    } else if (!isDesktop.matches) {
+      toggleMenu(nav, navSections);
+      nav.querySelector('button').focus();
+    }
+  }
+}
+
+function closeOnFocusLost(e) {
+  const nav = e.currentTarget;
+
+  if (!nav.contains(e.relatedTarget)) {
+    const navSections = nav.querySelector('.nav-sections');
+    if (!navSections) return;
+
+    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
+
+    if (navSectionExpanded && isDesktop.matches) {
+      toggleAllNavSections(navSections, false);
+    } else if (!isDesktop.matches) {
+      toggleMenu(nav, navSections, false);
+    }
+  }
+}
+
+function openOnKeydown(e) {
+  const focused = document.activeElement;
+  const isNavDrop = focused.className === 'nav-drop';
+
+  if (isNavDrop && (e.code === 'Enter' || e.code === 'Space')) {
+    const dropExpanded = focused.getAttribute('aria-expanded') === 'true';
+    toggleAllNavSections(focused.closest('.nav-sections'));
+    focused.setAttribute('aria-expanded', dropExpanded ? 'false' : 'true');
+  }
+}
+
+function focusNavSection() {
+  document.activeElement.addEventListener('keydown', openOnKeydown);
+}
+
 /**
  * loads and decorates the header
  */
@@ -136,12 +138,14 @@ export default async function decorate(block) {
   const navPath = navMeta ? new URL(navMeta, window.location).pathname : '/nav';
   const fragment = await loadFragment(navPath);
 
-  // decorate nav DOM
   block.textContent = '';
+
   const nav = document.createElement('nav');
   nav.id = 'nav';
 
-  while (fragment.firstElementChild) nav.append(fragment.firstElementChild);
+  while (fragment.firstElementChild) {
+    nav.append(fragment.firstElementChild);
+  }
 
   const classes = ['brand', 'sections', 'tools'];
 
@@ -169,17 +173,16 @@ export default async function decorate(block) {
         }
 
         navSection.addEventListener('click', () => {
-
           const navText = navSection.textContent.trim();
 
-          // ✅ ACDL Tracking - nav click
+          // ✅ ACDL Tracking
           pushToDataLayer({
-            event: "navClick",
+            event: 'navClick',
             navigation: {
               linkName: navText,
-              level: "primary",
-              device: isDesktop.matches ? "desktop" : "mobile"
-            }
+              level: 'primary',
+              device: isDesktop.matches ? 'desktop' : 'mobile',
+            },
           });
 
           if (isDesktop.matches) {
@@ -191,7 +194,6 @@ export default async function decorate(block) {
       });
   }
 
-  // hamburger for mobile
   const hamburger = document.createElement('div');
   hamburger.classList.add('nav-hamburger');
 
@@ -200,13 +202,11 @@ export default async function decorate(block) {
     </button>`;
 
   hamburger.addEventListener('click', () => {
-
-    // ✅ ACDL Tracking - hamburger click
     pushToDataLayer({
-      event: "hamburgerClick",
+      event: 'hamburgerClick',
       navigation: {
-        device: isDesktop.matches ? "desktop" : "mobile"
-      }
+        device: isDesktop.matches ? 'desktop' : 'mobile',
+      },
     });
 
     toggleMenu(nav, navSections);
@@ -217,9 +217,7 @@ export default async function decorate(block) {
 
   toggleMenu(nav, navSections, isDesktop.matches);
 
-  isDesktop.addEventListener('change', () =>
-    toggleMenu(nav, navSections, isDesktop.matches)
-  );
+  isDesktop.addEventListener('change', () => toggleMenu(nav, navSections, isDesktop.matches));
 
   const navWrapper = document.createElement('div');
   navWrapper.className = 'nav-wrapper';
@@ -229,12 +227,12 @@ export default async function decorate(block) {
 
   // ✅ Page Load Tracking
   pushToDataLayer({
-    event: "pageLoaded",
+    event: 'pageLoaded',
     page: {
       pageName: document.title,
       pageURL: window.location.href,
       pagePath: window.location.pathname,
-      language: document.documentElement.lang || "en"
-    }
+      language: document.documentElement.lang || 'en',
+    },
   });
 }
