@@ -15,7 +15,7 @@ function pushToDataLayer(payload) {
 const isDesktop = window.matchMedia('(min-width: 900px)');
 
 /**
- * ✅ Base utility
+ * Base utility
  */
 function toggleAllNavSections(sections, expanded = false) {
   if (!sections) return;
@@ -27,7 +27,7 @@ function toggleAllNavSections(sections, expanded = false) {
 }
 
 /**
- * ✅ Required before toggleMenu
+ * Required before toggleMenu
  */
 function openOnKeydown(e) {
   const focused = document.activeElement;
@@ -80,7 +80,7 @@ function closeOnFocusLost(e) {
 }
 
 /**
- * ✅ NOW safe to define toggleMenu
+ * Safe to define after dependencies
  */
 function toggleMenu(nav, navSections, forceExpanded = null) {
   const expanded = forceExpanded !== null
@@ -90,7 +90,6 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
   const button = nav.querySelector('.nav-hamburger button');
   const newState = expanded ? 'closed' : 'open';
 
-  // ACDL tracking
   pushToDataLayer({
     event: 'navToggle',
     navigation: {
@@ -133,7 +132,7 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
 }
 
 /**
- * ✅ MAIN
+ * Main
  */
 export default async function decorate(block) {
   const navMeta = getMetadata('nav');
@@ -235,4 +234,3 @@ export default async function decorate(block) {
     },
   });
 }
-``
