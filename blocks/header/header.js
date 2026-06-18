@@ -27,7 +27,7 @@ function toggleAllNavSections(sections, expanded = false) {
 }
 
 /**
- * Required before toggleMenu
+ * Keydown handler
  */
 function openOnKeydown(e) {
   const focused = document.activeElement;
@@ -44,43 +44,8 @@ function focusNavSection() {
   document.activeElement.addEventListener('keydown', openOnKeydown);
 }
 
-function closeOnEscape(e) {
-  if (e.code === 'Escape') {
-    const nav = document.getElementById('nav');
-    const navSections = nav.querySelector('.nav-sections');
-    if (!navSections) return;
-
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-
-    if (navSectionExpanded && isDesktop.matches) {
-      toggleAllNavSections(navSections);
-      navSectionExpanded.focus();
-    } else if (!isDesktop.matches) {
-      toggleMenu(nav, navSections);
-      nav.querySelector('button').focus();
-    }
-  }
-}
-
-function closeOnFocusLost(e) {
-  const nav = e.currentTarget;
-
-  if (!nav.contains(e.relatedTarget)) {
-    const navSections = nav.querySelector('.nav-sections');
-    if (!navSections) return;
-
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-
-    if (navSectionExpanded && isDesktop.matches) {
-      toggleAllNavSections(navSections, false);
-    } else if (!isDesktop.matches) {
-      toggleMenu(nav, navSections, false);
-    }
-  }
-}
-
 /**
- * Safe to define after dependencies
+ * IMPORTANT: toggleMenu BEFORE closeOnEscape / closeOnFocusLost
  */
 function toggleMenu(nav, navSections, forceExpanded = null) {
   const expanded = forceExpanded !== null
@@ -132,7 +97,45 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
 }
 
 /**
- * Main
+ * Now safe (toggleMenu already defined)
+ */
+function closeOnEscape(e) {
+  if (e.code === 'Escape') {
+    const nav = document.getElementById('nav');
+    const navSections = nav.querySelector('.nav-sections');
+    if (!navSections) return;
+
+    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
+
+    if (navSectionExpanded && isDesktop.matches) {
+      toggleAllNavSections(navSections);
+      navSectionExpanded.focus();
+    } else if (!isDesktop.matches) {
+      toggleMenu(nav, navSections);
+      nav.querySelector('button').focus();
+    }
+  }
+}
+
+function closeOnFocusLost(e) {
+  const nav = e.currentTarget;
+
+  if (!nav.contains(e.relatedTarget)) {
+    const navSections = nav.querySelector('.nav-sections');
+    if (!navSections) return;
+
+    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
+
+    if (navSectionExpanded && isDesktop.matches) {
+      toggleAllNavSections(navSections, false);
+    } else if (!isDesktop.matches) {
+      toggleMenu(nav, navSections, false);
+    }
+  }
+}
+
+/**
+ * MAIN
  */
 export default async function decorate(block) {
   const navMeta = getMetadata('nav');
