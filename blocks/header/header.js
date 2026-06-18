@@ -21,6 +21,56 @@ function toggleAllNavSections(sections, expanded = false) {
     });
 }
 
+// FIX: toggleMenu moved UP
+function toggleMenu(nav, navSections, forceExpanded = null) {
+  const expanded = forceExpanded !== null
+    ? !forceExpanded
+    : nav.getAttribute('aria-expanded') === 'true';
+
+  const button = nav.querySelector('.nav-hamburger button');
+  const newState = expanded ? 'closed' : 'open';
+
+  pushToDataLayer({
+    event: 'navToggle',
+    navigation: {
+      menuState: newState,
+      device: isDesktop.matches ? 'desktop' : 'mobile',
+    },
+  });
+
+  document.body.style.overflowY = (expanded || isDesktop.matches) ? '' : 'hidden';
+
+  nav.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  toggleAllNavSections(navSections, expanded || isDesktop.matches ? 'false' : 'true');
+  button.setAttribute('aria-label', expanded ? 'Open navigation' : 'Close navigation');
+
+  if (navSections) {
+    const navDrops = navSections.querySelectorAll('.nav-drop');
+
+    if (isDesktop.matches) {
+      navDrops.forEach((drop) => {
+        if (!drop.hasAttribute('tabindex')) {
+          drop.setAttribute('tabindex', 0);
+          drop.addEventListener('focus', focusNavSection);
+        }
+      });
+    } else {
+      navDrops.forEach((drop) => {
+        drop.removeAttribute('tabindex');
+        drop.removeEventListener('focus', focusNavSection);
+      });
+    }
+  }
+
+  if (!expanded || isDesktop.matches) {
+    window.addEventListener('keydown', closeOnEscape);
+    nav.addEventListener('focusout', closeOnFocusLost);
+  } else {
+    window.removeEventListener('keydown', closeOnEscape);
+    nav.removeEventListener('focusout', closeOnFocusLost);
+  }
+}
+
 function openOnKeydown(e) {
   const focused = document.activeElement;
   const isNavDrop = focused.className === 'nav-drop';
@@ -68,55 +118,6 @@ function closeOnFocusLost(e) {
     } else if (!isDesktop.matches) {
       toggleMenu(nav, navSections, false);
     }
-  }
-}
-
-function toggleMenu(nav, navSections, forceExpanded = null) {
-  const expanded = forceExpanded !== null
-    ? !forceExpanded
-    : nav.getAttribute('aria-expanded') === 'true';
-
-  const button = nav.querySelector('.nav-hamburger button');
-  const newState = expanded ? 'closed' : 'open';
-
-  pushToDataLayer({
-    event: 'navToggle',
-    navigation: {
-      menuState: newState,
-      device: isDesktop.matches ? 'desktop' : 'mobile',
-    },
-  });
-
-  document.body.style.overflowY = (expanded || isDesktop.matches) ? '' : 'hidden';
-
-  nav.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-  toggleAllNavSections(navSections, expanded || isDesktop.matches ? 'false' : 'true');
-  button.setAttribute('aria-label', expanded ? 'Open navigation' : 'Close navigation');
-
-  if (navSections) {
-    const navDrops = navSections.querySelectorAll('.nav-drop');
-
-    if (isDesktop.matches) {
-      navDrops.forEach((drop) => {
-        if (!drop.hasAttribute('tabindex')) {
-          drop.setAttribute('tabindex', 0);
-          drop.addEventListener('focus', focusNavSection);
-        }
-      });
-    } else {
-      navDrops.forEach((drop) => {
-        drop.removeAttribute('tabindex');
-        drop.removeEventListener('focus', focusNavSection);
-      });
-    }
-  }
-
-  if (!expanded || isDesktop.matches) {
-    window.addEventListener('keydown', closeOnEscape);
-    nav.addEventListener('focusout', closeOnFocusLost);
-  } else {
-    window.removeEventListener('keydown', closeOnEscape);
-    nav.removeEventListener('focusout', closeOnFocusLost);
   }
 }
 
